@@ -9,7 +9,575 @@
             --bg-color: #f4f1ea;
             --text-color: #2c2c2c;
             --card-bg: #ffffff;
+            --accent-color: #8b7e66<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מחברת השירים שלי</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Varela+Round&family=Assistant:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #f4f1ea;
+            --text-color: #2c2c2c;
+            --card-bg: #ffffff;
             --accent-color: #8b7e66;
+            --border-color: #e4dfd5;
+            --star-color: #d4af37;
+            
+            /* הגדרת פונטים משתנים */
+            --font-main: 'Assistant', sans-serif;
+            --font-handwriting: 'Amatic SC', cursive; /* פונט כתב יד ייחודי */
+            --font-rounded: 'Varela Round', sans-serif; /* פונט עגול ורך לתצוגה מקדימה */
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 300;
+            margin-bottom: 5px;
+            letter-spacing: -1px;
+        }
+
+        .intro {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 300;
+            margin: 0;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        .search-input {
+            font-family: var(--font-main);
+            flex: 1;
+            padding: 12px 18px;
+            font-size: 0.95rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .filter-btn {
+            font-family: var(--font-main);
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0 15px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            user-select: none;
+            color: var(--text-color);
+        }
+
+        .filter-btn .btn-star {
+            color: #ccc;
+            font-size: 1.1rem;
+            transition: color 0.2s;
+        }
+
+        .filter-btn.active {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .filter-btn.active .btn-star {
+            color: var(--star-color);
+        }
+
+        .songs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .song-item {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            position: relative;
+        }
+
+        .song-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+
+        .song-item-title {
+            font-size: 1.15rem;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        /* אלמנט תצוגה מקדימה - משתמש בפונט עגול וחם */
+        .song-preview-tooltip {
+            font-family: var(--font-rounded);
+            position: absolute;
+            bottom: 110%;
+            right: 20px;
+            background-color: #333333;
+            color: #ffffff;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform: translateY(5px);
+            z-index: 10;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            max-width: 80%;
+        }
+
+        .song-preview-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            right: 20px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #333333 transparent transparent transparent;
+        }
+
+        .song-item:hover .song-preview-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .star-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+            color: #b5b0a5;
+            transition: transform 0.2s, color 0.2s;
+            outline: none;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .star-btn:hover {
+            transform: scale(1.15);
+        }
+
+        .star-btn.is-favorite {
+            color: var(--star-color);
+        }
+
+        .full-view-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 35px;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.01);
+        }
+
+        .full-view-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .full-view-title {
+            font-size: 1.6rem;
+            font-weight: 400;
+            margin: 0;
+            color: var(--accent-color);
+        }
+
+        .back-btn {
+            font-family: var(--font-main);
+            background: none;
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            background-color: var(--bg-color);
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        /* מילות השיר המלאות - שימוש בפונט כתב יד חם וגדול יותר */
+        .song-text {
+            font-family: var(--font-handwriting);
+            font-size: 1.8rem; /* פונט כתב יד דורש גודל מעט גדול יותר לקריאה נוחה */
+            letter-spacing: 0.5px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            margin: 0 0 30px 0;
+        }
+
+        .nav-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .nav-btn {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.85rem;
+            color: #777;
+            font-weight: 300;
+        }
+
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 150px;
+            font-weight: 300;
+            color: #666;
+            gap: 15px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s infinite linear;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #888;
+            padding: 30px;
+            font-weight: 300;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader" class="loader-container">
+        <div class="spinner"></div>
+        <div>טוען את מחברת השירים...</div>
+    </div>
+
+    <div id="main-content" class="container hidden">
+        
+        <div id="list-view">
+            <header>
+                <h1 id="main-title">מחברת השירים</h1>
+                <p id="intro-text" class="intro"></p>
+            </header>
+
+            <div class="controls-row">
+                <input type="text" id="search-box" class="search-input" placeholder="חפש שיר לפי כותרת או מילים...">
+                <button id="favorites-toggle" class="filter-btn">
+                    <span id="filter-star-icon" class="btn-star">☆</span> מועדפים
+                </button>
+            </div>
+
+            <main id="songs-container" class="songs-list">
+                </main>
+        </div>
+
+        <div id="full-view" class="hidden">
+            <article class="full-view-card">
+                <div class="full-view-header">
+                    <h2 id="full-title" class="full-view-title"></h2>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <button id="full-star-btn" class="star-btn">☆</button>
+                        <button id="back-to-list-btn" class="back-btn">→ חזרה לרשימה</button>
+                    </div>
+                </div>
+                
+                <pre id="full-text" class="song-text"></pre>
+
+                <div class="nav-controls">
+                    <button id="prev-btn" class="nav-btn">← השיר הקודם</button>
+                    <span id="page-counter" class="counter">0 מתוך 0</span>
+                    <button id="next-btn" class="nav-btn">השיר הבא →</button>
+                </div>
+            </article>
+        </div>
+
+    </div>
+
+    <script>
+        const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbwsJg_n4vUVRtSQ_78jlsOdOnLN2wwQmpku1litQEKI5W7xClmaxxXVMZ5mvxNKN4RD/exec";
+        
+        let allSongs = [];
+        let filteredSongs = [];
+        let favorites = JSON.parse(localStorage.getItem('my_favorite_songs')) || [];
+        let showOnlyFavorites = false;
+        let currentIndex = 0;
+
+        async function fetchNotebookData() {
+            try {
+                const response = await fetch(GOOGLE_API_URL);
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('loader').innerText = "שגיאה בטעינה: " + data.error;
+                    return;
+                }
+
+                document.getElementById('main-title').innerText = data.settings.mainTitle || "מחברת השירים";
+                document.getElementById('intro-text').innerText = data.settings.introText || "";
+                if (data.settings.bgColor) {
+                    document.documentElement.style.setProperty('--bg-color', data.settings.bgColor);
+                }
+
+                allSongs = data.songs;
+                
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                
+                applyFiltering();
+
+            } catch (error) {
+                document.getElementById('loader').innerText = "שגיאה בתקשורת עם השרת.";
+                console.error(error);
+            }
+        }
+
+        function applyFiltering() {
+            const searchTerm = document.getElementById('search-box').value.toLowerCase().trim();
+
+            filteredSongs = allSongs.filter(song => {
+                const matchesSearch = song.displayTitle.toLowerCase().includes(searchTerm) || 
+                                      song.fullContent.toLowerCase().includes(searchTerm);
+                const matchesFav = !showOnlyFavorites || favorites.includes(song.displayTitle);
+                return matchesSearch && matchesFav;
+            });
+
+            renderListView();
+        }
+
+        function getExcerpt(content) {
+            if (!content) return "";
+            const lines = content.split('\n').filter(line => line.trim() !== "");
+            return lines.slice(0, 3).join('\n') + (lines.length > 3 ? '\n...' : '');
+        }
+
+        function renderListView() {
+            const container = document.getElementById('songs-container');
+            container.innerHTML = "";
+
+            if (filteredSongs.length === 0) {
+                container.innerHTML = showOnlyFavorites 
+                    ? `<div class="empty-message">עדיין לא סימנת שירים בכוכב</div>`
+                    : `<div class="empty-message">לא נמצאו שירים תואמים לחיפוש</div>`;
+                return;
+            }
+
+            filteredSongs.forEach((song, index) => {
+                const item = document.createElement('div');
+                item.className = 'song-item';
+                
+                const isFav = favorites.includes(song.displayTitle);
+                const excerpt = getExcerpt(song.fullContent);
+                
+                item.innerHTML = `
+                    <h3 class="song-item-title">${song.displayTitle}</h3>
+                    <div class="song-preview-tooltip">${excerpt}</div>
+                    <button class="star-btn ${isFav ? 'is-favorite' : ''}" data-title="${song.displayTitle}">
+                        ${isFav ? '★' : '☆'}
+                    </button>
+                `;
+
+                item.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('star-btn')) {
+                        toggleFavorite(song.displayTitle);
+                        applyFiltering();
+                    } else {
+                        currentIndex = index;
+                        openFullView();
+                    }
+                });
+
+                container.appendChild(item);
+            });
+        }
+
+        function openFullView() {
+            const song = filteredSongs[currentIndex];
+            if (!song) return;
+
+            document.getElementById('full-title').innerText = song.displayTitle;
+            document.getElementById('full-text').innerText = song.fullContent;
+            
+            const fullStar = document.getElementById('full-star-btn');
+            const isFav = favorites.includes(song.displayTitle);
+            
+            fullStar.innerHTML = isFav ? '★' : '☆';
+            fullStar.classList.toggle('is-favorite', isFav);
+
+            document.getElementById('page-counter').innerText = `${currentIndex + 1} מתוך ${filteredSongs.length}`;
+            document.getElementById('prev-btn').disabled = (currentIndex === 0);
+            document.getElementById('next-btn').disabled = (currentIndex === filteredSongs.length - 1);
+
+            document.getElementById('list-view').classList.add('hidden');
+            document.getElementById('full-view').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function closeFullView() {
+            document.getElementById('full-view').classList.add('hidden');
+            document.getElementById('list-view').classList.remove('hidden');
+            applyFiltering();
+        }
+
+        function toggleFavorite(title) {
+            if (favorites.includes(title)) {
+                favorites = favorites.filter(fav => fav !== title);
+            } else {
+                favorites.push(title);
+            }
+            localStorage.setItem('my_favorite_songs', JSON.stringify(favorites));
+        }
+
+        document.getElementById('back-to-list-btn').addEventListener('click', closeFullView);
+        
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentIndex < filteredSongs.length - 1) {
+                currentIndex++;
+                openFullView();
+            }
+        });
+
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                openFullView();
+            }
+        });
+
+        document.getElementById('search-box').addEventListener('input', applyFiltering);
+        
+        document.getElementById('favorites-toggle').addEventListener('click', () => {
+            showOnlyFavorites = !showOnlyFavorites;
+            
+            const toggleBtn = document.getElementById('favorites-toggle');
+            const starIcon = document.getElementById('filter-star-icon');
+            
+            toggleBtn.classList.toggle('active', showOnlyFavorites);
+            starIcon.innerHTML = showOnlyFavorites ? '★' : '☆';
+            
+            applyFiltering();
+        });
+
+        document.getElementById('full-star-btn').addEventListener('click', () => {
+            const song = filteredSongs[currentIndex];
+            if (song) {
+                toggleFavorite(song.displayTitle);
+                const isFav = favorites.includes(song.displayTitle);
+                const fullStar = document.getElementById('full-star-btn');
+                
+                fullStar.innerHTML = isFav ? '★' : '☆';
+                fullStar.classList.toggle('is-favorite', isFav);
+            }
+        });
+
+        fetchNotebookData();
+    </script>
+</body>
+</html>
             --border-color: #e4dfd5;
             --star-color: #d4af37;
         }
