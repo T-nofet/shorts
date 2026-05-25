@@ -11,7 +11,7 @@
             --card-bg: #ffffff;
             --accent-color: #8b7e66;
             --border-color: #e4dfd5;
-            --star-color: #f1c40f;
+            --star-color: #d4af37; /* צהוב זהב מעט עמוק ואלגנטי יותר */
         }
 
         body {
@@ -86,12 +86,23 @@
             gap: 8px;
             transition: all 0.2s;
             user-select: none;
+            color: var(--text-color);
+        }
+
+        .filter-btn .btn-star {
+            color: #ccc;
+            font-size: 1.1rem;
+            transition: color 0.2s;
         }
 
         .filter-btn.active {
             background-color: var(--accent-color);
             color: white;
             border-color: var(--accent-color);
+        }
+
+        .filter-btn.active .btn-star {
+            color: var(--star-color);
         }
 
         .songs-list {
@@ -124,20 +135,24 @@
             margin: 0;
         }
 
+        /* עיצוב כוכב רזה ואלגנטי */
         .star-btn {
             background: none;
             border: none;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             cursor: pointer;
             padding: 5px;
-            color: #ccc;
+            color: #b5b0a5; /* צבע אפרפר עדין כשהוא ריק */
             transition: transform 0.2s, color 0.2s;
             outline: none;
             line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .star-btn:hover {
-            transform: scale(1.2);
+            transform: scale(1.15);
         }
 
         .star-btn.is-favorite {
@@ -231,7 +246,6 @@
             font-weight: 300;
         }
 
-        /* עיצוב אנימציית טעינה עגולה ונקייה */
         .loader-container {
             display: flex;
             flex-direction: column;
@@ -287,7 +301,7 @@
             <div class="controls-row">
                 <input type="text" id="search-box" class="search-input" placeholder="חפש שיר לפי כותרת או מילים...">
                 <button id="favorites-toggle" class="filter-btn">
-                    <span>⭐</span> מועדפים
+                    <span id="filter-star-icon" class="btn-star">☆</span> מועדפים
                 </button>
             </div>
 
@@ -300,7 +314,7 @@
                 <div class="full-view-header">
                     <h2 id="full-title" class="full-view-title"></h2>
                     <div style="display: flex; gap: 12px; align-items: center;">
-                        <button id="full-star-btn" class="star-btn">⭐</button>
+                        <button id="full-star-btn" class="star-btn">☆</button>
                         <button id="back-to-list-btn" class="back-btn">→ חזרה לרשימה</button>
                     </div>
                 </div>
@@ -385,9 +399,12 @@
                 
                 const isFav = favorites.includes(song.displayTitle);
                 
+                // שימוש בכוכב מלא או ריק בהתאם למצב
                 item.innerHTML = `
                     <h3 class="song-item-title">${song.displayTitle}</h3>
-                    <button class="star-btn ${isFav ? 'is-favorite' : ''}" data-title="${song.displayTitle}">⭐</button>
+                    <button class="star-btn ${isFav ? 'is-favorite' : ''}" data-title="${song.displayTitle}">
+                        ${isFav ? '★' : '☆'}
+                    </button>
                 `;
 
                 item.addEventListener('click', (e) => {
@@ -412,7 +429,10 @@
             document.getElementById('full-text').innerText = song.fullContent;
             
             const fullStar = document.getElementById('full-star-btn');
-            fullStar.classList.toggle('is-favorite', favorites.includes(song.displayTitle));
+            const isFav = favorites.includes(song.displayTitle);
+            
+            fullStar.innerHTML = isFav ? '★' : '☆';
+            fullStar.classList.toggle('is-favorite', isFav);
 
             document.getElementById('page-counter').innerText = `${currentIndex + 1} מתוך ${filteredSongs.length}`;
             document.getElementById('prev-btn').disabled = (currentIndex === 0);
@@ -458,7 +478,13 @@
         
         document.getElementById('favorites-toggle').addEventListener('click', () => {
             showOnlyFavorites = !showOnlyFavorites;
-            document.getElementById('favorites-toggle').classList.toggle('active', showOnlyFavorites);
+            
+            const toggleBtn = document.getElementById('favorites-toggle');
+            const starIcon = document.getElementById('filter-star-icon');
+            
+            toggleBtn.classList.toggle('active', showOnlyFavorites);
+            starIcon.innerHTML = showOnlyFavorites ? '★' : '☆';
+            
             applyFiltering();
         });
 
@@ -466,7 +492,11 @@
             const song = filteredSongs[currentIndex];
             if (song) {
                 toggleFavorite(song.displayTitle);
-                document.getElementById('full-star-btn').classList.toggle('is-favorite', favorites.includes(song.displayTitle));
+                const isFav = favorites.includes(song.displayTitle);
+                const fullStar = document.getElementById('full-star-btn');
+                
+                fullStar.innerHTML = isFav ? '★' : '☆';
+                fullStar.classList.toggle('is-favorite', isFav);
             }
         });
 
