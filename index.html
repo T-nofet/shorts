@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מחברת השירים שלי</title>
+    <style>
+        :root {
+            --bg-color: #f4f1ea;
+            --text-color: #2c2c2c;
+            --card-bg: #ffffff;
+            --accent-color: #8b7e66;
+            --border-color: #e4dfd5;
+            --heart-color: #e74c3c;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 35px;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 300;
+            margin-bottom: 5px;
+            letter-spacing: -1px;
+        }
+
+        .intro {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 300;
+            margin: 0;
+        }
+
+        /* סרגל כלים: חיפוש וסינון מועדפים */
+        .controls-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 18px;
+            font-size: 0.95rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .filter-btn {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0 15px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .filter-btn.active {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        /* רשימת השירים (תצוגת רשימה) */
+        .songs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .song-item {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .song-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+
+        .song-item-title {
+            font-size: 1.15rem;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        /* כפתור לב (מועדפים) */
+        .heart-btn {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 5px;
+            color: #ccc;
+            transition: transform 0.2s, color 0.2s;
+            outline: none;
+        }
+
+        .heart-btn:hover {
+            transform: scale(1.15);
+        }
+
+        .heart-btn.is-favorite {
+            color: var(--heart-color);
+        }
+
+        /* מסך שיר מלא */
+        .full-view-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 35px;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.01);
+        }
+
+        .full-view-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .full-view-title {
+            font-size: 1.6rem;
+            font-weight: 400;
+            margin: 0;
+            color: var(--accent-color);
+        }
+
+        .back-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            background-color: var(--bg-color);
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .song-text {
+            font-size: 1.15rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            margin: 0;
+        }
+
+        /* טעינה ומצבים ריקים */
+        .loader {
+            font-size: 1.2rem;
+            color: #888;
+            text-align: center;
+            margin-top: 100px;
+            font-weight: 300;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #888;
+            padding: 30px;
+            font-weight: 300;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader" class="loader">טוען את מחברת השירים...</div>
+
+    <div id="main-content" class="container hidden">
+        
+        <div id="list-view">
+            <header>
+                <h1 id="main-title">מחברת השירים</h1>
+                <p id="intro-text" class="intro"></p>
+            </header>
+
+            <div class="controls-row">
+                <input type="text" id="search-box" class="search-input" placeholder="חפש שיר לפי כותרת או מילים...">
+                <button id="favorites-toggle" class="filter-btn">
+                    <span>❤️</span> מועדפים
+                </button>
+            </div>
+
+            <main id="songs-container" class="songs-list">
+                </main>
+        </div>
+
+        <div id="full-view" class="hidden">
+            <article class="full-view-card">
+                <div class="full-view-header">
+                    <h2 id="full-title" class="full-view-title"></h2>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <button id="full-heart-btn" class="heart-btn">❤️</button>
+                        <button id="back-to-list-btn" class="back-btn">→ חזרה לרשימה</button>
+                    </div>
+                </div>
+                <pre id="full-text" class="song-text"></pre>
+            </article>
+        </div>
+
+    </div>
+
+    <script>
+        const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbwsJg_n4vUVRtSQ_78jlsOdOnLN2wwQmpku1litQEKI5W7xClmaxxXVMZ5mvxNKN4RD/exec";
+        
+        let allSongs = [];
+        let favorites = JSON.parse(localStorage.getItem('my_favorite_songs')) || [];
+        let showOnlyFavorites = false;
+        let activeSong = null;
+
+        async function fetchNotebookData() {
+            try {
+                const response = await fetch(GOOGLE_API_URL);
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('loader').innerText = "שגיאה בטעינה: " + data.error;
+                    return;
+                }
+
+                document.getElementById('main-title').innerText = data.settings.mainTitle || "מחברת השירים";
+                document.getElementById('intro-text').innerText = data.settings.introText || "";
+                if (data.settings.bgColor) {
+                    document.documentElement.style.setProperty('--bg-color', data.settings.bgColor);
+                }
+
+                allSongs = data.songs;
+                
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                
+                renderListView();
+
+            } catch (error) {
+                document.getElementById('loader').innerText = "שגיאה בתקשורת עם השרת.";
+                console.error(error);
+            }
+        }
+
+        // רינדור רשימת השירים על המסך
+        function renderListView() {
+            const container = document.getElementById('songs-container');
+            container.innerHTML = "";
+            
+            const searchTerm = document.getElementById('search-box').value.toLowerCase().trim();
+
+            // סינון השירים לפי חיפוש ולפי מועדפים
+            const filtered = allSongs.filter(song => {
+                const matchesSearch = song.displayTitle.toLowerCase().includes(searchTerm) || 
+                                      song.fullContent.toLowerCase().includes(searchTerm);
+                const matchesFav = !showOnlyFavorites || favorites.includes(song.displayTitle);
+                return matchesSearch && matchesFav;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = showOnlyFavorites 
+                    ? `<div class="empty-message">עדיין לא סימנת שירים במועדפים</div>`
+                    : `<div class="empty-message">לא נמצאו שירים תואמים לחיפוש</div>`;
+                return;
+            }
+
+            filtered.forEach(song => {
+                const item = document.createElement('div');
+                item.className = 'song-item';
+                
+                const isFav = favorites.includes(song.displayTitle);
+                
+                item.innerHTML = `
+                    <h3 class="song-item-title">${song.displayTitle}</h3>
+                    <button class="heart-btn ${isFav ? 'is-favorite' : ''}" data-title="${song.displayTitle}">❤️</button>
+                `;
+
+                // לחיצה על השורה פותחת את השיר המלא (אלא אם לחצו ישירות על הלב)
+                item.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('heart-btn')) {
+                        toggleFavorite(song.displayTitle);
+                        renderListView();
+                    } else {
+                        openFullView(song);
+                    }
+                });
+
+                container.appendChild(item);
+            });
+        }
+
+        // פתיחת תצוגת שיר מלא
+        function openFullView(song) {
+            activeSong = song;
+            document.getElementById('full-title').innerText = song.displayTitle;
+            document.getElementById('full-text').innerText = song.fullContent;
+            
+            // עדכון מצב הלב במסך המלא
+            const fullHeart = document.getElementById('full-heart-btn');
+            if (favorites.includes(song.displayTitle)) {
+                fullHeart.classList.add('is-favorite');
+            } else {
+                fullHeart.classList.remove('is-favorite');
+            }
+
+            // החלפת מסכים
+            document.getElementById('list-view').classList.add('hidden');
+            document.getElementById('full-view').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // חזרה לרשימה
+        function closeFullView() {
+            activeSong = null;
+            document.getElementById('full-view').classList.add('hidden');
+            document.getElementById('list-view').classList.remove('hidden');
+            renderListView(); // רענון הרשימה (למקרה שמצב המועדפים השתנה בפנים)
+        }
+
+        // הוספה/הסרה ממועדפים ושל שמירה ב-LocalStorage
+        function toggleFavorite(title) {
+            if (favorites.includes(title)) {
+                favorites = favorites.filter(fav => fav !== title);
+            } else {
+                favorites.push(title);
+            }
+            localStorage.setItem('my_favorite_songs', JSON.stringify(favorites));
+        }
+
+        // האזנה לאירועים באפליקציה
+        document.getElementById('back-to-list-btn').addEventListener('click', closeFullView);
+        
+        document.getElementById('search-box').addEventListener('input', renderListView);
+        
+        document.getElementById('favorites-toggle').addEventListener('click', (e) => {
+            showOnlyFavorites = !showOnlyFavorites;
+            document.getElementById('favorites-toggle').classList.toggle('active', showOnlyFavorites);
+            renderListView();
+        });
+
+        document.getElementById('full-heart-btn').addEventListener('click', () => {
+            if (activeSong) {
+                toggleFavorite(activeSong.displayTitle);
+                document.getElementById('full-heart-btn').classList.toggle('is-favorite', favorites.includes(activeSong.displayTitle));
+            }
+        });
+
+        // טעינה ראשונית
+        fetchNotebookData();
+    </script>
+</body>
+</html>
