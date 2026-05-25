@@ -11,7 +11,7 @@
             --card-bg: #ffffff;
             --accent-color: #8b7e66;
             --border-color: #e4dfd5;
-            --heart-color: #e74c3c;
+            --star-color: #f1c40f;
         }
 
         body {
@@ -36,7 +36,6 @@
         header {
             text-align: center;
             margin-bottom: 35px;
-            position: relative;
         }
 
         h1 {
@@ -96,7 +95,7 @@
             border-color: var(--accent-color);
         }
 
-        /* רשימת השירים (תצוגת רשימה) */
+        /* רשימת השירים */
         .songs-list {
             display: flex;
             flex-direction: column;
@@ -108,7 +107,7 @@
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 18px 20px;
+            padding: 16px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -127,24 +126,25 @@
             margin: 0;
         }
 
-        /* כפתור לב (מועדפים) */
-        .heart-btn {
+        /* כפתור כוכב (מועדפים) - קטן ועדין */
+        .star-btn {
             background: none;
             border: none;
-            font-size: 1.3rem;
+            font-size: 1.1rem; /* מוקטן לבקשתך */
             cursor: pointer;
             padding: 5px;
             color: #ccc;
             transition: transform 0.2s, color 0.2s;
             outline: none;
+            line-height: 1;
         }
 
-        .heart-btn:hover {
-            transform: scale(1.15);
+        .star-btn:hover {
+            transform: scale(1.2);
         }
 
-        .heart-btn.is-favorite {
-            color: var(--heart-color);
+        .star-btn.is-favorite {
+            color: var(--star-color);
         }
 
         /* מסך שיר מלא */
@@ -195,7 +195,45 @@
             font-size: 1.15rem;
             line-height: 1.8;
             white-space: pre-wrap;
-            margin: 0;
+            margin: 0 0 30px 0;
+        }
+
+        /* סרגל ניווט תחתון בתוך השיר המלא */
+        .nav-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .nav-btn {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.85rem;
+            color: #777;
+            font-weight: 300;
         }
 
         /* טעינה ומצבים ריקים */
@@ -234,7 +272,7 @@
             <div class="controls-row">
                 <input type="text" id="search-box" class="search-input" placeholder="חפש שיר לפי כותרת או מילים...">
                 <button id="favorites-toggle" class="filter-btn">
-                    <span>❤️</span> מועדפים
+                    <span>⭐</span> מועדפים
                 </button>
             </div>
 
@@ -246,12 +284,19 @@
             <article class="full-view-card">
                 <div class="full-view-header">
                     <h2 id="full-title" class="full-view-title"></h2>
-                    <div style="display: flex; gap: 15px; align-items: center;">
-                        <button id="full-heart-btn" class="heart-btn">❤️</button>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <button id="full-star-btn" class="star-btn">⭐</button>
                         <button id="back-to-list-btn" class="back-btn">→ חזרה לרשימה</button>
                     </div>
                 </div>
+                
                 <pre id="full-text" class="song-text"></pre>
+
+                <div class="nav-controls">
+                    <button id="prev-btn" class="nav-btn">← השיר הקודם</button>
+                    <span id="page-counter" class="counter">0 מתוך 0</span>
+                    <button id="next-btn" class="nav-btn">השיר הבא →</button>
+                </div>
             </article>
         </div>
 
@@ -261,9 +306,10 @@
         const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbwsJg_n4vUVRtSQ_78jlsOdOnLN2wwQmpku1litQEKI5W7xClmaxxXVMZ5mvxNKN4RD/exec";
         
         let allSongs = [];
+        let filteredSongs = []; // הרשימה שתשמש לדפדוף (מושפעת מחיפוש או סינון מועדפים)
         let favorites = JSON.parse(localStorage.getItem('my_favorite_songs')) || [];
         let showOnlyFavorites = false;
-        let activeSong = null;
+        let currentIndex = 0;   // האינדקס של השיר שפתוח כרגע במסך המלא
 
         async function fetchNotebookData() {
             try {
@@ -286,7 +332,7 @@
                 document.getElementById('loader').classList.add('hidden');
                 document.getElementById('main-content').classList.remove('hidden');
                 
-                renderListView();
+                applyFiltering();
 
             } catch (error) {
                 document.getElementById('loader').innerText = "שגיאה בתקשורת עם השרת.";
@@ -294,29 +340,33 @@
             }
         }
 
-        // רינדור רשימת השירים על המסך
-        function renderListView() {
-            const container = document.getElementById('songs-container');
-            container.innerHTML = "";
-            
+        // פונקציה שמחשבת אילו שירים צריכים להופיע על סמך החיפוש והמועדפים
+        function applyFiltering() {
             const searchTerm = document.getElementById('search-box').value.toLowerCase().trim();
 
-            // סינון השירים לפי חיפוש ולפי מועדפים
-            const filtered = allSongs.filter(song => {
+            filteredSongs = allSongs.filter(song => {
                 const matchesSearch = song.displayTitle.toLowerCase().includes(searchTerm) || 
                                       song.fullContent.toLowerCase().includes(searchTerm);
                 const matchesFav = !showOnlyFavorites || favorites.includes(song.displayTitle);
                 return matchesSearch && matchesFav;
             });
 
-            if (filtered.length === 0) {
+            renderListView();
+        }
+
+        // רינדור רשימת השירים על המסך
+        function renderListView() {
+            const container = document.getElementById('songs-container');
+            container.innerHTML = "";
+
+            if (filteredSongs.length === 0) {
                 container.innerHTML = showOnlyFavorites 
-                    ? `<div class="empty-message">עדיין לא סימנת שירים במועדפים</div>`
+                    ? `<div class="empty-message">עדיין לא סימנת שירים בכוכב</div>`
                     : `<div class="empty-message">לא נמצאו שירים תואמים לחיפוש</div>`;
                 return;
             }
 
-            filtered.forEach(song => {
+            filteredSongs.forEach((song, index) => {
                 const item = document.createElement('div');
                 item.className = 'song-item';
                 
@@ -324,16 +374,17 @@
                 
                 item.innerHTML = `
                     <h3 class="song-item-title">${song.displayTitle}</h3>
-                    <button class="heart-btn ${isFav ? 'is-favorite' : ''}" data-title="${song.displayTitle}">❤️</button>
+                    <button class="star-btn ${isFav ? 'is-favorite' : ''}" data-title="${song.displayTitle}">⭐</button>
                 `;
 
-                // לחיצה על השורה פותחת את השיר המלא (אלא אם לחצו ישירות על הלב)
+                // לחיצה פותחת את השיר המלא ומעדכנת את המיקום הנוכחי שלו ברשימה לדפדוף
                 item.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('heart-btn')) {
+                    if (e.target.classList.contains('star-btn')) {
                         toggleFavorite(song.displayTitle);
-                        renderListView();
+                        applyFiltering();
                     } else {
-                        openFullView(song);
+                        currentIndex = index; // שמירת המיקום ברשימה המסוננת
+                        openFullView();
                     }
                 });
 
@@ -341,35 +392,37 @@
             });
         }
 
-        // פתיחת תצוגת שיר מלא
-        function openFullView(song) {
-            activeSong = song;
+        // עדכון והצגת מסך השיר המלא
+        function openFullView() {
+            const song = filteredSongs[currentIndex];
+            if (!song) return;
+
             document.getElementById('full-title').innerText = song.displayTitle;
             document.getElementById('full-text').innerText = song.fullContent;
             
-            // עדכון מצב הלב במסך המלא
-            const fullHeart = document.getElementById('full-heart-btn');
-            if (favorites.includes(song.displayTitle)) {
-                fullHeart.classList.add('is-favorite');
-            } else {
-                fullHeart.classList.remove('is-favorite');
-            }
+            // עדכון כוכב מועדפים במסך מלא
+            const fullStar = document.getElementById('full-star-btn');
+            fullStar.classList.toggle('is-favorite', favorites.includes(song.displayTitle));
 
-            // החלפת מסכים
+            // עדכון המונה וכפתורי הדפדוף
+            document.getElementById('page-counter').innerText = `${currentIndex + 1} מתוך ${filteredSongs.length}`;
+            document.getElementById('prev-btn').disabled = (currentIndex === 0);
+            document.getElementById('next-btn').disabled = (currentIndex === filteredSongs.length - 1);
+
+            // מעבר למסך המלא
             document.getElementById('list-view').classList.add('hidden');
             document.getElementById('full-view').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // חזרה לרשימה
+        // חזרה לרשימה הראשית
         function closeFullView() {
-            activeSong = null;
             document.getElementById('full-view').classList.add('hidden');
             document.getElementById('list-view').classList.remove('hidden');
-            renderListView(); // רענון הרשימה (למקרה שמצב המועדפים השתנה בפנים)
+            applyFiltering(); // רענון כדי לעדכן שינויי כוכבים אם נעשו בפנים
         }
 
-        // הוספה/הסרה ממועדפים ושל שמירה ב-LocalStorage
+        // הוספה או הסרה מהמועדפים
         function toggleFavorite(title) {
             if (favorites.includes(title)) {
                 favorites = favorites.filter(fav => fav !== title);
@@ -379,25 +432,40 @@
             localStorage.setItem('my_favorite_songs', JSON.stringify(favorites));
         }
 
-        // האזנה לאירועים באפליקציה
+        // האזנה לאירועים וכפתורי הניווט הפנימיים
         document.getElementById('back-to-list-btn').addEventListener('click', closeFullView);
         
-        document.getElementById('search-box').addEventListener('input', renderListView);
-        
-        document.getElementById('favorites-toggle').addEventListener('click', (e) => {
-            showOnlyFavorites = !showOnlyFavorites;
-            document.getElementById('favorites-toggle').classList.toggle('active', showOnlyFavorites);
-            renderListView();
-        });
-
-        document.getElementById('full-heart-btn').addEventListener('click', () => {
-            if (activeSong) {
-                toggleFavorite(activeSong.displayTitle);
-                document.getElementById('full-heart-btn').classList.toggle('is-favorite', favorites.includes(activeSong.displayTitle));
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentIndex < filteredSongs.length - 1) {
+                currentIndex++;
+                openFullView();
             }
         });
 
-        // טעינה ראשונית
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                openFullView();
+            }
+        });
+
+        document.getElementById('search-box').addEventListener('input', applyFiltering);
+        
+        document.getElementById('favorites-toggle').addEventListener('click', () => {
+            showOnlyFavorites = !showOnlyFavorites;
+            document.getElementById('favorites-toggle').classList.toggle('active', showOnlyFavorites);
+            applyFiltering();
+        });
+
+        document.getElementById('full-star-btn').addEventListener('click', () => {
+            const song = filteredSongs[currentIndex];
+            if (song) {
+                toggleFavorite(song.displayTitle);
+                document.getElementById('full-star-btn').classList.toggle('is-favorite', favorites.includes(song.displayTitle));
+            }
+        });
+
+        // הפעלה ראשונית של המערכת
         fetchNotebookData();
     </script>
 </body>
