@@ -4,11 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>מחברת השירים שלי</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600&family=Varela+Round&display=swap" rel="stylesheet">
-
     <style>
         :root {
             --bg-color: #f4f1ea;
@@ -16,13 +11,11 @@
             --card-bg: #ffffff;
             --accent-color: #8b7e66;
             --border-color: #e4dfd5;
-            --star-color: #d4af37; /* צהוב זהב עדין ואלגנטי */
-            --font-main: 'Assistant', sans-serif;
-            --font-rounded: 'Varela Round', sans-serif;
+            --star-color: #d4af37;
         }
 
         body {
-            font-family: var(--font-main);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -67,7 +60,6 @@
         }
 
         .search-input {
-            font-family: var(--font-main);
             flex: 1;
             padding: 12px 18px;
             font-size: 0.95rem;
@@ -83,7 +75,6 @@
         }
 
         .filter-btn {
-            font-family: var(--font-main);
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -99,9 +90,9 @@
         }
 
         .filter-btn .btn-star {
-            color: #b5b0a5;
             font-size: 1.1rem;
             transition: color 0.2s;
+            color: #b5b0a5;
         }
 
         .filter-btn.active {
@@ -121,7 +112,6 @@
             width: 100%;
         }
 
-        /* עיצוב תיבות השירים מחדש - מינימליסטי ונקי */
         .song-item {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -132,7 +122,6 @@
             align-items: center;
             cursor: pointer;
             transition: transform 0.15s, box-shadow 0.15s;
-            position: relative;
         }
 
         .song-item:hover {
@@ -146,53 +135,13 @@
             margin: 0;
         }
 
-        /* בועית תצוגה מקדימה נקייה בעיצוב כהה ומודרני */
-        .song-preview-tooltip {
-            font-family: var(--font-rounded);
-            position: absolute;
-            bottom: 115%;
-            right: 20px;
-            background-color: #333333;
-            color: #ffffff;
-            padding: 12px 16px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            line-height: 1.5;
-            white-space: pre-wrap;
-            pointer-events: none;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            transform: translateY(5px);
-            z-index: 10;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-            max-width: 80%;
-        }
-
-        .song-preview-tooltip::after {
-            content: "";
-            position: absolute;
-            top: 100%;
-            right: 20px;
-            border-width: 6px;
-            border-style: solid;
-            border-color: #333333 transparent transparent transparent;
-        }
-
-        .song-item:hover .song-preview-tooltip {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        /* כוכבים רזים ואלגנטיים */
         .star-btn {
             background: none;
             border: none;
             font-size: 1.2rem;
             cursor: pointer;
             padding: 5px;
-            color: #b5b0a5; /* אפרפר עדין כשהוא ריק */
+            color: #b5b0a5;
             transition: transform 0.2s, color 0.2s;
             outline: none;
             line-height: 1;
@@ -236,7 +185,6 @@
         }
 
         .back-btn {
-            font-family: var(--font-main);
             background: none;
             border: 1px solid var(--border-color);
             padding: 8px 16px;
@@ -254,8 +202,7 @@
         }
 
         .song-text {
-            font-family: var(--font-rounded);
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             line-height: 1.8;
             white-space: pre-wrap;
             margin: 0 0 30px 0;
@@ -270,7 +217,6 @@
         }
 
         .nav-btn {
-            font-family: var(--font-main);
             background-color: var(--bg-color);
             border: 1px solid var(--border-color);
             color: var(--text-color);
@@ -299,7 +245,6 @@
             font-weight: 300;
         }
 
-        /* אנימציית טעינה עגולה ונקייה */
         .loader-container {
             display: flex;
             flex-direction: column;
@@ -436,13 +381,6 @@
             renderListView();
         }
 
-        // חילוץ 3 שורות ראשונות בלבד עבור התצוגה המקדימה בריחוף עכבר
-        function getExcerpt(content) {
-            if (!content) return "";
-            const lines = content.split('\n').filter(line => line.trim() !== "");
-            return lines.slice(0, 3).join('\n') + (lines.length > 3 ? '\n...' : '');
-        }
-
         function renderListView() {
             const container = document.getElementById('songs-container');
             container.innerHTML = "";
@@ -459,11 +397,9 @@
                 item.className = 'song-item';
                 
                 const isFav = favorites.includes(song.displayTitle);
-                const excerpt = getExcerpt(song.fullContent);
                 
                 item.innerHTML = `
                     <h3 class="song-item-title">${song.displayTitle}</h3>
-                    <div class="song-preview-tooltip">${excerpt}</div>
                     <button class="star-btn ${isFav ? 'is-favorite' : ''}" data-title="${song.displayTitle}">
                         ${isFav ? '★' : '☆'}
                     </button>
