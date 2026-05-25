@@ -11,7 +11,7 @@
             --card-bg: #ffffff;
             --accent-color: #8b7e66;
             --border-color: #e4dfd5;
-            --star-color: #d4af37; /* צהוב זהב מעט עמוק ואלגנטי יותר */
+            --star-color: #d4af37;
         }
 
         body {
@@ -112,6 +112,7 @@
             width: 100%;
         }
 
+        /* עיצוב שורת השיר ותמיכה בבוקסת הריחוף */
         .song-item {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -122,6 +123,7 @@
             align-items: center;
             cursor: pointer;
             transition: transform 0.15s, box-shadow 0.15s;
+            position: relative; /* נחוץ בשביל מיקום התצוגה המקדימה */
         }
 
         .song-item:hover {
@@ -135,14 +137,54 @@
             margin: 0;
         }
 
-        /* עיצוב כוכב רזה ואלגנטי */
+        /* אלמנט תצוגה מקדימה (Tooltip) מוסתר כברירת מחדל */
+        .song-preview-tooltip {
+            position: absolute;
+            bottom: 110%; /* צף מעל השורה */
+            right: 20px;
+            background-color: #333333; /* כהה ומודרני כדי ליצור קונטרסט נקי */
+            color: #ffffff;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            pointer-events: none; /* שלא יפריע לעכבר */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform: translateY(5px);
+            z-index: 10;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            max-width: 80%;
+            font-style: italic;
+        }
+
+        /* חץ קטן מתחת לבועת התצוגה המקדימה */
+        .song-preview-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            right: 20px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #333333 transparent transparent transparent;
+        }
+
+        /* הפעלת הריחוף בעמידה עם העכבר */
+        .song-item:hover .song-preview-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
         .star-btn {
             background: none;
             border: none;
             font-size: 1.2rem;
             cursor: pointer;
             padding: 5px;
-            color: #b5b0a5; /* צבע אפרפר עדין כשהוא ריק */
+            color: #b5b0a5;
             transition: transform 0.2s, color 0.2s;
             outline: none;
             line-height: 1;
@@ -382,6 +424,13 @@
             renderListView();
         }
 
+        // פונקציית עזר לחילוץ 3 השורות הראשונות בלבד לתצוגה מקדימה
+        function getExcerpt(content) {
+            if (!content) return "";
+            const lines = content.split('\n').filter(line => line.trim() !== "");
+            return lines.slice(0, 3).join('\n') + (lines.length > 3 ? '\n...' : '');
+        }
+
         function renderListView() {
             const container = document.getElementById('songs-container');
             container.innerHTML = "";
@@ -398,10 +447,12 @@
                 item.className = 'song-item';
                 
                 const isFav = favorites.includes(song.displayTitle);
+                const excerpt = getExcerpt(song.fullContent);
                 
-                // שימוש בכוכב מלא או ריק בהתאם למצב
+                // הזרקת מבנה השורה יחד עם דיב התצוגה המקדימה הנסתר
                 item.innerHTML = `
                     <h3 class="song-item-title">${song.displayTitle}</h3>
+                    <div class="song-preview-tooltip">${excerpt}</div>
                     <button class="star-btn ${isFav ? 'is-favorite' : ''}" data-title="${song.displayTitle}">
                         ${isFav ? '★' : '☆'}
                     </button>
