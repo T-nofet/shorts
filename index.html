@@ -6,7 +6,7 @@
     <title>מחברת השירים שלי</title>
     <style>
         :root {
-            --bg-color: #faf8f5; /* צבע הרקע הצהבהב-קרם העדין המקורי */
+            --bg-color: #faf8f5;
             --text-color: #2c2c2c;
             --card-bg: #ffffff;
             --accent-color: #8b7e66;
@@ -27,7 +27,6 @@
             box-sizing: border-box;
         }
 
-        /* עטיפה ראשית המאפשרת לבועית לצוף בצד שמאל של הרשימה בלי להסתיר */
         .app-layout {
             display: block;
             position: relative;
@@ -137,63 +136,63 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.02);
         }
 
-        /* עיצוב הבועית החדש - צף משמאל לרשימה ולא מסתיר כלום */
+        /* בועית קומפקטית שמוצבת רחוק יותר משמאל (Left: calc(100% + 40px)) */
         .song-preview-tooltip {
             position: absolute;
             top: 50%;
-            left: calc(100% + 20px); /* מציב את הבועית משמאל לפריט (מחוץ לגבולות הרשימה) */
-            transform: translateY(-50%) translateX(-10px);
-            background-color: #333333;
+            left: calc(100% + 40px); 
+            transform: translateY(-50%) translateX(-15px);
+            background-color: rgba(40, 40, 40, 0.96); /* רקע כהה חצי שקוף עדין */
             color: #ffffff;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            line-height: 1.5;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            line-height: 1.4;
             white-space: pre-wrap;
             pointer-events: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            width: 260px; /* רוחב קבוע ואסתטי לבועית הצידית */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            width: 230px; /* רוחב קטן יותר */
             z-index: 100;
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.2s ease, transform 0.2s ease;
+            transition: opacity 0.15s ease, transform 0.15s ease;
+            font-weight: 300;
         }
 
-        /* חץ קטן שמצביע אל כותרת השיר מימין לשמאל */
+        /* חץ קטן ומרוחק יותר */
         .song-preview-tooltip::after {
             content: "";
             position: absolute;
             top: 50%;
             right: 100%;
-            margin-top: -6px;
-            border-width: 6px;
+            margin-top: -5px;
+            border-width: 5px;
             border-style: solid;
-            border-color: transparent #333333 transparent transparent;
+            border-color: transparent rgba(40, 40, 40, 0.96) transparent transparent;
         }
 
-        /* הצגת הבועית רק בריחוף עכבר */
         .song-item:hover .song-preview-tooltip {
             opacity: 1;
             visibility: visible;
             transform: translateY(-50%) translateX(0);
         }
 
-        /* התאמה למסכים קטנים / טלפונים - הבועית תחזור למעלה כדי שלא תגלוש מהמסך */
-        @media (max-width: 1100px) {
+        /* מובייל ומסכים קטנים - מניעה של זליגה הצידה */
+        @media (max-width: 1150px) {
             .song-preview-tooltip {
                 left: auto;
                 right: 20px;
                 top: auto;
-                bottom: 110%;
+                bottom: 115%;
                 transform: translateY(5px);
                 width: calc(100% - 40px);
-                max-width: 320px;
+                max-width: 280px;
             }
             .song-preview-tooltip::after {
                 top: 100%;
                 right: 20px;
                 margin-top: 0;
-                border-color: #333333 transparent transparent transparent;
+                border-color: rgba(40, 40, 40, 0.96) transparent transparent transparent;
             }
             .song-item:hover .song-preview-tooltip {
                 transform: translateY(0);
@@ -431,7 +430,6 @@
                 
                 const isFav = favorites.includes(song.displayTitle);
                 
-                // יצירת מבנה הפריט עם הבועית הצידית המשופרת
                 item.innerHTML = `
                     <h3 class="song-item-title">${song.displayTitle}</h3>
                     <div class="song-preview-tooltip">${song.preview || 'אין תצוגה מקדימה'}</div>
