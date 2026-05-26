@@ -194,7 +194,7 @@
             align-items: center;
             cursor: pointer;
             transition: transform 0.15s, box-shadow 0.15s, background-color 0.3s;
-            gap: 20px;
+            gap: 0px; /* צומצם ל-0 כדי לאפשר הצמדה מוחלטת */
         }
 
         .song-item:hover {
@@ -207,7 +207,6 @@
             display: flex;
             flex-direction: column;
             gap: 2px;
-            flex: 1;
             overflow: hidden;
         }
 
@@ -218,7 +217,7 @@
             white-space: nowrap;
         }
 
-        /* פיצ'ר 3: שיפור וריכוך ה-Preview במחשב */
+        /* פיצ'ר 3 מתוקן: ה-Preview במחשב מתחיל בצמוד לכותרת */
         .song-inline-preview {
             font-size: 0.9rem;
             color: #888;
@@ -226,11 +225,12 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            text-align: left;
+            text-align: right; /* יישור לימין כדי להתחבר לכותרת */
             opacity: 0;
-            transform: translateX(-8px);
+            transform: translateX(8px);
             transition: opacity 0.25s ease, transform 0.25s ease, color 0.3s;
-            flex: 1;
+            flex: 1; /* תופס את שאר המקום הפנוי ודוחף רק את הכוכב לשמאל */
+            margin-right: 15px; /* מרווח קבוע ואלגנטי מיד בסיום שם השיר */
         }
 
         .song-item:hover .song-inline-preview {
@@ -253,10 +253,10 @@
         /* זיהוי מסכי מגע וניידים - העברת תצוגת הפריוויו אל מתחת לכותרת */
         @media (max-width: 768px) {
             .song-inline-preview {
-                display: none !important; /* מעלים את הריחוף של המחשב */
+                display: none !important;
             }
             .song-mobile-preview {
-                display: block; /* מציג מתחת לכותרת קבוע */
+                display: block;
             }
         }
 
@@ -274,6 +274,7 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            margin-right: auto; /* דוחף את הכוכב לקצה השמאלי הקיצוני */
         }
 
         .star-btn:hover {
@@ -415,7 +416,7 @@
                     <div class="full-view-header">
                         <h2 id="full-title" class="full-view-title"></h2>
                         <div style="display: flex; gap: 12px; align-items: center;">
-                            <button id="full-star-btn" class="star-btn">☆</button>
+                            <button id="full-star-btn" class="star-btn" style="margin-right: 0;">☆</button>
                             <button id="back-to-list-btn" class="back-btn">→ חזרה לרשימה</button>
                         </div>
                     </div>
@@ -564,7 +565,6 @@
                 
                 const isFav = favorites.includes(song.displayTitle);
                 
-                // סידור מחדש של ה-HTML הפנימי לתמיכה בפריוויו כפול (נייד/מחשב)
                 item.innerHTML = `
                     <div class="song-title-group">
                         <h3 class="song-item-title">${song.displayTitle}</h3>
