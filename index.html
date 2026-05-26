@@ -245,31 +245,6 @@
             font-weight: 300;
         }
 
-        .loader-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin-top: 150px;
-            font-weight: 300;
-            color: #666;
-            gap: 15px;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border-color);
-            border-top-color: var(--accent-color);
-            border-radius: 50%;
-            animation: spin 1s infinite linear;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         .empty-message {
             text-align: center;
             color: #888;
@@ -284,12 +259,7 @@
 </head>
 <body>
 
-    <div id="loader" class="loader-container">
-        <div class="spinner"></div>
-        <div>טוען את מחברת השירים...</div>
-    </div>
-
-    <div id="main-content" class="container hidden">
+    <div id="main-content" class="container">
         
         <div id="list-view">
             <header>
@@ -331,7 +301,8 @@
     </div>
 
     <script>
-        const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbwsJg_n4vUVRtSQ_78jlsOdOnLN2wwQmpku1litQEKI5W7xClmaxxXVMZ5mvxNKN4RD/exec";
+        // פנייה ישירה לקובץ הסטטי והמהיר בתוך הריפוזיטורי במקום לגוגל
+        const LOCAL_DATA_URL = "data.json";
         
         let allSongs = [];
         let filteredSongs = [];
@@ -341,13 +312,8 @@
 
         async function fetchNotebookData() {
             try {
-                const response = await fetch(GOOGLE_API_URL);
+                const response = await fetch(LOCAL_DATA_URL);
                 const data = await response.json();
-                
-                if (data.error) {
-                    document.getElementById('loader').innerText = "שגיאה בטעינה: " + data.error;
-                    return;
-                }
 
                 document.getElementById('main-title').innerText = data.settings.mainTitle || "מחברת השירים";
                 document.getElementById('intro-text').innerText = data.settings.introText || "";
@@ -356,15 +322,10 @@
                 }
 
                 allSongs = data.songs;
-                
-                document.getElementById('loader').classList.add('hidden');
-                document.getElementById('main-content').classList.remove('hidden');
-                
                 applyFiltering();
 
             } catch (error) {
-                document.getElementById('loader').innerText = "שגיאה בתקשורת עם השרת.";
-                console.error(error);
+                console.error("שגיאה בטעינת הקובץ הסטטי:", error);
             }
         }
 
