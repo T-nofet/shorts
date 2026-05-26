@@ -27,12 +27,20 @@
             box-sizing: border-box;
         }
 
+        /* מניעת הגליץ': מוסתר כברירת מחדל עד שהנתונים נטענים לחלוטין */
         .app-layout {
             display: block;
             position: relative;
             max-width: 700px;
             width: 100%;
             margin-top: 20px;
+            opacity: 0;
+            transition: opacity 0.25s ease-in-out;
+        }
+
+        /* מופעל רק לאחר טעינת הנתונים */
+        .app-layout.ready {
+            opacity: 1;
         }
 
         .container {
@@ -49,6 +57,7 @@
             font-weight: 300;
             margin-bottom: 5px;
             letter-spacing: -1px;
+            min-height: 3.2rem; /* שומר מקום לכותרת כדי למנוע קפיצה ויזואלית */
         }
 
         .intro {
@@ -56,6 +65,7 @@
             color: #666;
             font-weight: 300;
             margin: 0;
+            min-height: 1.5rem;
         }
 
         .controls-row {
@@ -128,7 +138,7 @@
             align-items: center;
             cursor: pointer;
             transition: transform 0.15s, box-shadow 0.15s;
-            gap: 20px; /* מרווח בין האלמנטים בשורה */
+            gap: 20px;
         }
 
         .song-item:hover {
@@ -141,25 +151,23 @@
             font-weight: 400;
             margin: 0;
             white-space: nowrap;
-            flex-shrink: 0; /* מונע מהכותרת להתכווץ */
+            flex-shrink: 0;
         }
 
-        /* אלמנט תצוגה מקדימה חדש - יושב בדיוק בין הכותרת לכוכב */
         .song-inline-preview {
-            flex: 1; /* תופס את כל המרחב האמצעי */
+            flex: 1;
             font-size: 0.9rem;
             color: #888;
             font-weight: 300;
             white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis; /* מוסיף שלוש נקודות אם ארוך מדי */
-            text-align: left; /* דוחף את זה לכיוון השמאלי, קרוב לכוכב */
-            opacity: 0; /* מוסתר כברירת מחדל */
+            text-overflow: ellipsis;
+            text-align: left;
+            opacity: 0;
             transform: translateX(-5px);
             transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
-        /* מציג את התצוגה המקדימה רק בריחוף (Hover) על השורה */
         .song-item:hover .song-inline-preview {
             opacity: 1;
             transform: translateX(0);
@@ -178,7 +186,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0; /* מונע מהכוכב להתכווץ */
+            flex-shrink: 0;
         }
 
         .star-btn:hover {
@@ -290,12 +298,12 @@
 </head>
 <body>
 
-    <div class="app-layout">
+    <div id="app-wrapper" class="app-layout">
         <div id="main-content" class="container">
             
             <div id="list-view">
                 <header>
-                    <h1 id="main-title">מחברת השירים</h1>
+                    <h1 id="main-title"></h1>
                     <p id="intro-text" class="intro"></p>
                 </header>
 
@@ -347,7 +355,7 @@
                 const response = await fetch(LOCAL_DATA_URL);
                 const data = await response.json();
 
-                document.getElementById('main-title').innerText = data.settings.mainTitle || "מחברת השירים";
+                document.getElementById('main-title').innerText = data.settings.mainTitle || "";
                 document.getElementById('intro-text').innerText = data.settings.introText || "";
                 if (data.settings.bgColor) {
                     document.documentElement.style.setProperty('--bg-color', data.settings.bgColor);
@@ -356,8 +364,13 @@
                 allSongs = data.songs;
                 applyFiltering();
 
+                // חשיפת האפליקציה בצורה חלקה רק לאחר שהכול מוזרק ומעודכן
+                document.getElementById('app-wrapper').classList.add('ready');
+
             } catch (error) {
                 console.error("שגיאה בטעינת הנתונים:", error);
+                // במקרה של שגיאה בכל זאת נציג את המבנה
+                document.getElementById('app-wrapper').classList.add('ready');
             }
         }
 
@@ -391,7 +404,6 @@
                 
                 const isFav = favorites.includes(song.displayTitle);
                 
-                // מבנה שורה מעודכן: כותרת -> תצוגה מקדימה באמצע -> כוכב
                 item.innerHTML = `
                     <h3 class="song-item-title">${song.displayTitle}</h3>
                     <div class="song-inline-preview">${song.preview || ''}</div>
