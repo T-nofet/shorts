@@ -136,39 +136,42 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.02);
         }
 
-        /* בועית קומפקטית שמוצבת רחוק יותר משמאל (Left: calc(100% + 40px)) */
+        /* תיקון מיקום אבסולוטי מדויק לצד שמאל הקיצוני (left: auto, right: calc(100% + 25px)) */
         .song-preview-tooltip {
             position: absolute;
             top: 50%;
-            left: calc(100% + 40px); 
-            transform: translateY(-50%) translateX(-15px);
-            background-color: rgba(40, 40, 40, 0.96); /* רקע כהה חצי שקוף עדין */
+            left: auto;
+            right: calc(100% + 25px); 
+            transform: translateY(-50%) translateX(15px);
+            background-color: rgba(40, 40, 40, 0.96);
             color: #ffffff;
-            padding: 10px 14px;
-            border-radius: 6px;
+            padding: 12px 16px;
+            border-radius: 8px;
             font-size: 0.88rem;
-            line-height: 1.4;
+            line-height: 1.5;
             white-space: pre-wrap;
             pointer-events: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-            width: 230px; /* רוחב קטן יותר */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            width: 240px;
             z-index: 100;
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.15s ease, transform 0.15s ease;
             font-weight: 300;
+            text-align: right;
         }
 
-        /* חץ קטן ומרוחק יותר */
+        /* חץ קטן שמצביע בדיוק מצד שמאל לימין */
         .song-preview-tooltip::after {
             content: "";
             position: absolute;
             top: 50%;
-            right: 100%;
-            margin-top: -5px;
-            border-width: 5px;
+            left: 100%;
+            right: auto;
+            margin-top: -6px;
+            border-width: 6px;
             border-style: solid;
-            border-color: transparent rgba(40, 40, 40, 0.96) transparent transparent;
+            border-color: transparent transparent transparent rgba(40, 40, 40, 0.96);
         }
 
         .song-item:hover .song-preview-tooltip {
@@ -177,8 +180,8 @@
             transform: translateY(-50%) translateX(0);
         }
 
-        /* מובייל ומסכים קטנים - מניעה של זליגה הצידה */
-        @media (max-width: 1150px) {
+        /* התאמה למסכים קטנים ומובייל - צף מעל הכרטיסייה */
+        @media (max-width: 1200px) {
             .song-preview-tooltip {
                 left: auto;
                 right: 20px;
@@ -190,7 +193,8 @@
             }
             .song-preview-tooltip::after {
                 top: 100%;
-                right: 20px;
+                left: 20px;
+                right: auto;
                 margin-top: 0;
                 border-color: rgba(40, 40, 40, 0.96) transparent transparent transparent;
             }
@@ -432,11 +436,22 @@
                 
                 item.innerHTML = `
                     <h3 class="song-item-title">${song.displayTitle}</h3>
-                    <div class="song-preview-tooltip">${song.preview || 'אין תצוגה מקדימה'}</div>
+                    <div class="song-preview-tooltip"></div>
                     <button class="star-btn ${isFav ? 'is-favorite' : ''}" data-title="${song.displayTitle}">
                         ${isFav ? '★' : '☆'}
                     </button>
                 `;
+
+                // מניעת גליץ': הזרקת הטקסט רק ברגע הריחוף המדויק וניקוי שלו ביציאה
+                const tooltip = item.querySelector('.song-preview-tooltip');
+                
+                item.addEventListener('mouseenter', () => {
+                    tooltip.innerText = song.preview || 'אין תצוגה מקדימה';
+                });
+                
+                item.addEventListener('mouseleave', () => {
+                    tooltip.innerText = '';
+                });
 
                 item.addEventListener('click', (e) => {
                     if (e.target.classList.contains('star-btn')) {
