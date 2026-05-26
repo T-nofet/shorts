@@ -127,8 +127,8 @@
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            position: relative;
             transition: transform 0.15s, box-shadow 0.15s;
+            gap: 20px; /* מרווח בין האלמנטים בשורה */
         }
 
         .song-item:hover {
@@ -136,77 +136,33 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.02);
         }
 
-        /* תיקון מיקום אבסולוטי מדויק לצד שמאל הקיצוני (left: auto, right: calc(100% + 25px)) */
-        .song-preview-tooltip {
-            position: absolute;
-            top: 50%;
-            left: auto;
-            right: calc(100% + 25px); 
-            transform: translateY(-50%) translateX(15px);
-            background-color: rgba(40, 40, 40, 0.96);
-            color: #ffffff;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 0.88rem;
-            line-height: 1.5;
-            white-space: pre-wrap;
-            pointer-events: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            width: 240px;
-            z-index: 100;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.15s ease, transform 0.15s ease;
-            font-weight: 300;
-            text-align: right;
-        }
-
-        /* חץ קטן שמצביע בדיוק מצד שמאל לימין */
-        .song-preview-tooltip::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: 100%;
-            right: auto;
-            margin-top: -6px;
-            border-width: 6px;
-            border-style: solid;
-            border-color: transparent transparent transparent rgba(40, 40, 40, 0.96);
-        }
-
-        .song-item:hover .song-preview-tooltip {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(-50%) translateX(0);
-        }
-
-        /* התאמה למסכים קטנים ומובייל - צף מעל הכרטיסייה */
-        @media (max-width: 1200px) {
-            .song-preview-tooltip {
-                left: auto;
-                right: 20px;
-                top: auto;
-                bottom: 115%;
-                transform: translateY(5px);
-                width: calc(100% - 40px);
-                max-width: 280px;
-            }
-            .song-preview-tooltip::after {
-                top: 100%;
-                left: 20px;
-                right: auto;
-                margin-top: 0;
-                border-color: rgba(40, 40, 40, 0.96) transparent transparent transparent;
-            }
-            .song-item:hover .song-preview-tooltip {
-                transform: translateY(0);
-            }
-        }
-
         .song-item-title {
             font-size: 1.15rem;
             font-weight: 400;
             margin: 0;
+            white-space: nowrap;
+            flex-shrink: 0; /* מונע מהכותרת להתכווץ */
+        }
+
+        /* אלמנט תצוגה מקדימה חדש - יושב בדיוק בין הכותרת לכוכב */
+        .song-inline-preview {
+            flex: 1; /* תופס את כל המרחב האמצעי */
+            font-size: 0.9rem;
+            color: #888;
+            font-weight: 300;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis; /* מוסיף שלוש נקודות אם ארוך מדי */
+            text-align: left; /* דוחף את זה לכיוון השמאלי, קרוב לכוכב */
+            opacity: 0; /* מוסתר כברירת מחדל */
+            transform: translateX(-5px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        /* מציג את התצוגה המקדימה רק בריחוף (Hover) על השורה */
+        .song-item:hover .song-inline-preview {
+            opacity: 1;
+            transform: translateX(0);
         }
 
         .star-btn {
@@ -222,6 +178,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0; /* מונע מהכוכב להתכווץ */
         }
 
         .star-btn:hover {
@@ -434,24 +391,14 @@
                 
                 const isFav = favorites.includes(song.displayTitle);
                 
+                // מבנה שורה מעודכן: כותרת -> תצוגה מקדימה באמצע -> כוכב
                 item.innerHTML = `
                     <h3 class="song-item-title">${song.displayTitle}</h3>
-                    <div class="song-preview-tooltip"></div>
+                    <div class="song-inline-preview">${song.preview || ''}</div>
                     <button class="star-btn ${isFav ? 'is-favorite' : ''}" data-title="${song.displayTitle}">
                         ${isFav ? '★' : '☆'}
                     </button>
                 `;
-
-                // מניעת גליץ': הזרקת הטקסט רק ברגע הריחוף המדויק וניקוי שלו ביציאה
-                const tooltip = item.querySelector('.song-preview-tooltip');
-                
-                item.addEventListener('mouseenter', () => {
-                    tooltip.innerText = song.preview || 'אין תצוגה מקדימה';
-                });
-                
-                item.addEventListener('mouseleave', () => {
-                    tooltip.innerText = '';
-                });
 
                 item.addEventListener('click', (e) => {
                     if (e.target.classList.contains('star-btn')) {
