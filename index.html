@@ -27,7 +27,6 @@
             box-sizing: border-box;
         }
 
-        /* מניעת הגליץ': מוסתר כברירת מחדל עד שהנתונים נטענים לחלוטין */
         .app-layout {
             display: block;
             position: relative;
@@ -38,7 +37,6 @@
             transition: opacity 0.25s ease-in-out;
         }
 
-        /* מופעל רק לאחר טעינת הנתונים */
         .app-layout.ready {
             opacity: 1;
         }
@@ -57,7 +55,7 @@
             font-weight: 300;
             margin-bottom: 5px;
             letter-spacing: -1px;
-            min-height: 3.2rem; /* שומר מקום לכותרת כדי למנוע קפיצה ויזואלית */
+            min-height: 3.2rem;
         }
 
         .intro {
@@ -71,7 +69,7 @@
         .controls-row {
             display: flex;
             gap: 15px;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             width: 100%;
         }
 
@@ -119,6 +117,49 @@
 
         .filter-btn.active .btn-star {
             color: var(--star-color);
+        }
+
+        /* שורת כרכים / לשוניות חדשה */
+        .volumes-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            scroll-behavior: smooth;
+        }
+        
+        .volumes-bar::-webkit-scrollbar {
+            height: 4px;
+        }
+        
+        .volumes-bar::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .volume-tab {
+            background-color: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 6px 12px;
+            font-size: 0.95rem;
+            color: #777;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            font-weight: 300;
+        }
+
+        .volume-tab:hover {
+            color: var(--text-color);
+        }
+
+        .volume-tab.active {
+            color: var(--accent-color);
+            border-bottom-color: var(--accent-color);
+            font-weight: 500;
         }
 
         .songs-list {
@@ -314,6 +355,9 @@
                     </button>
                 </div>
 
+                <nav id="volumes-container" class="volumes-bar">
+                    </nav>
+
                 <main id="songs-container" class="songs-list">
                     </main>
             </div>
@@ -346,6 +390,9 @@
         
         let allSongs = [];
         let filteredSongs = [];
+        let uniqueVolumes = ["הכול"]; // ברירת מחדל ללשונית הראשונה
+        let selectedVolume = "הכול";
+        
         let favorites = JSON.parse(localStorage.getItem('my_favorite_songs')) || [];
         let showOnlyFavorites = false;
         let currentIndex = 0;
@@ -362,16 +409,55 @@
                 }
 
                 allSongs = data.songs;
+                
+                // שליפת כל הכרכים הקיימים בשירים ויצירת רשימה ייחודית
+                const volumesSet = new Set();
+                allSongs.forEach(song => {
+                    if (song.volume) volumesSet.add(song.volume);
+                });
+                
+                // הוספת הכרכים שמצאנו לרשימת הלשוניות העליונה
+                uniqueVolumes = ["הכול", ...Array.from(volumesSet)];
+                
+                renderVolumesBar();
                 applyFiltering();
 
-                // חשיפת האפליקציה בצורה חלקה רק לאחר שהכול מוזרק ומעודכן
                 document.getElementById('app-wrapper').classList.add('ready');
 
             } catch (error) {
                 console.error("שגיאה בטעינת הנתונים:", error);
-                // במקרה של שגיאה בכל זאת נציג את המבנה
                 document.getElementById('app-wrapper').classList.add('ready');
             }
+        }
+
+        function renderVolumesBar() {
+            const container = document.getElementById('volumes-container');
+            container.innerHTML = "";
+            
+            // אם יש רק כרך אחד (או שאין בכלל חלוקה), נסחב את השורה כדי לשמור על מינימליזם
+            if (uniqueVolumes.length <= 2 && uniqueVolumes.includes("כללי")) {
+                container.style.display = "none";
+                return;
+            } else {
+                container.style.display = "flex";
+            }
+
+            uniqueVolumes.forEach(vol => {
+                const btn = document.createElement('button');
+                btn.className = `volume-tab ${selectedVolume === vol ? 'active' : ''}`;
+                btn.innerText = vol;
+                
+                btn.addEventListener('click', () => {
+                    selectedVolume = vol;
+                    // החלפת הסטטוס הפעיל ויזואלית
+                    document.querySelectorAll('.volume-tab').forEach(t => t.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    applyFiltering();
+                });
+                
+                container.appendChild(btn);
+            });
         }
 
         function applyFiltering() {
@@ -381,7 +467,11 @@
                 const matchesSearch = song.displayTitle.toLowerCase().includes(searchTerm) || 
                                       song.fullContent.toLowerCase().includes(searchTerm);
                 const matchesFav = !showOnlyFavorites || favorites.includes(song.displayTitle);
-                return matchesSearch && matchesFav;
+                
+                // סינון לפי הכרך הנבחר
+                const matchesVolume = (selectedVolume === "הכול") || (song.volume === selectedVolume);
+                
+                return matchesSearch && matchesFav && matchesVolume;
             });
 
             renderListView();
@@ -393,8 +483,8 @@
 
             if (filteredSongs.length === 0) {
                 container.innerHTML = showOnlyFavorites 
-                    ? `<div class="empty-message">עדיין לא סימנת שירים בכוכב</div>`
-                    : `<div class="empty-message">לא נמצאו שירים תואמים לחיפוש</div>`;
+                    ? `<div class="empty-message">עדיין לא סימנת שירים בכוכב בכרך זה</div>`
+                    : `<div class="empty-message">לא נמצאו שירים תואמים בכרך זה</div>`;
                 return;
             }
 
