@@ -121,12 +121,51 @@
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
+            position: relative;
             transition: transform 0.15s, box-shadow 0.15s;
         }
 
         .song-item:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+
+        /* עיצוב הבועית של התצוגה המקדימה בריחוף */
+        .song-preview-tooltip {
+            position: absolute;
+            bottom: 110%;
+            right: 20px;
+            background-color: #333333;
+            color: #ffffff;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            pointer-events: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            max-width: 80%;
+            z-index: 10;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform: translateY(5px);
+        }
+
+        .song-preview-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            right: 20px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #333333 transparent transparent transparent;
+        }
+
+        .song-item:hover .song-preview-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
 
         .song-item-title {
@@ -301,7 +340,6 @@
     </div>
 
     <script>
-        // פנייה ישירה לקובץ הסטטי והמהיר בתוך הריפוזיטורי במקום לגוגל
         const LOCAL_DATA_URL = "data.json";
         
         let allSongs = [];
@@ -359,8 +397,10 @@
                 
                 const isFav = favorites.includes(song.displayTitle);
                 
+                // הזרקת מבנה הפריט יחד עם הבועית (Tooltip) הצפה
                 item.innerHTML = `
                     <h3 class="song-item-title">${song.displayTitle}</h3>
+                    <div class="song-preview-tooltip">${song.preview || 'אין תצוגה מקדימה'}</div>
                     <button class="star-btn ${isFav ? 'is-favorite' : ''}" data-title="${song.displayTitle}">
                         ${isFav ? '★' : '☆'}
                     </button>
