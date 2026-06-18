@@ -386,26 +386,9 @@
         .hidden {
             display: none !important;
         }
-
-        .snapshot-banner {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 0.9rem;
-            width: 100%;
-            box-sizing: border-box;
-        }
     </style>
 </head>
 <body>
-
-    <div id="snapshot-notice" class="snapshot-banner hidden">
-        📌 מבט קפוא: אתה צופה בגיבוי ששותף איתך באופן ידני. השינויים במחברת המקורית לא ישפיעו על דף זה.
-    </div>
 
     <div id="app-wrapper" class="app-layout">
         <div id="main-content" class="container">
@@ -425,7 +408,7 @@
 
                 <div class="volumes-row-wrapper">
                     <nav id="volumes-container" class="volumes-bar"></nav>
-                    <button id="share-volume-btn" class="action-btn style-minimal">🔗 שתף כרך קפוא</button>
+                    <button id="share-volume-btn" class="action-btn">🔗 העתק קישור לכרך</button>
                 </div>
 
                 <main id="songs-container" class="songs-list"></main>
@@ -436,9 +419,9 @@
                     <div class="full-view-header">
                         <h2 id="full-title" class="full-view-title"></h2>
                         <div style="display: flex; gap: 8px; align-items: center;">
-                            <button id="share-song-btn" class="action-btn">🔗 שתף שיר קפוא</button>
+                            <button id="share-song-btn" class="action-btn">🔗 העתק קישור לשיר</button>
                             <button id="full-star-btn" class="star-btn" style="margin-right: 0;">☆</button>
-                            <button id="back-to-list-btn" class="action-btn">→ חזרה</button>
+                            <button id="back-to-list-btn" class="action-btn">→ חזרה לרשימה</button>
                         </div>
                     </div>
                     
@@ -472,7 +455,6 @@
         let showOnlyFavorites = false;
         let currentIndex = 0;
 
-        // פונקציות עזר לדחיסה ופריסה של טקסט בעברית לתוך ה-URL (תמיכה ב-UTF-8)
         function compressToB64(obj) {
             const str = JSON.stringify(obj);
             const bytes = new TextEncoder().encode(str);
@@ -494,7 +476,7 @@
                 }
                 return JSON.parse(new TextDecoder().decode(bytes));
             } catch (e) {
-                console.error("שגיאה בפענוח הנתונים הקפואים", e);
+                console.error("שגיאה בפענוח הנתונים", e);
                 return null;
             }
         }
@@ -521,14 +503,13 @@
             const snapshotData = urlParams.get('snap');
 
             if (snapshotData) {
-                // מצב קפוא: טעינת נתונים ישירות מה-URL
                 const decoded = decompressFromB64(snapshotData);
                 if (decoded) {
                     isSnapshotMode = true;
-                    document.getElementById('snapshot-notice').classList.remove('hidden');
-                    document.getElementById('share-volume-btn').classList.add('hidden'); // אין טעם לשתף שוב כרך מתוך כרך קפוא
+                    document.getElementById('share-volume-btn').classList.add('hidden');
+                    document.getElementById('favorites-toggle').classList.add('hidden');
 
-                    document.getElementById('main-title').innerText = decoded.settings.mainTitle || "כרך משותף קפוא";
+                    document.getElementById('main-title').innerText = decoded.settings.mainTitle || "";
                     document.getElementById('intro-text').innerText = decoded.settings.introText || "";
                     if (decoded.settings.bgColor) {
                         document.documentElement.style.setProperty('--bg-color', decoded.settings.bgColor);
@@ -544,7 +525,6 @@
                 }
             }
 
-            // מצב רגיל וחי: טעינה מ-data.json
             try {
                 const response = await fetch(LOCAL_DATA_URL);
                 const data = await response.json();
@@ -566,7 +546,7 @@
                 applyFiltering();
                 document.getElementById('app-wrapper').classList.add('ready');
             } catch (error) {
-                console.error("שגיאה בטעינת הקובץ הדינמי:", error);
+                console.error("שגיאה בטעינת הקובץ:", error);
                 document.getElementById('app-wrapper').classList.add('ready');
             }
         }
@@ -619,18 +599,19 @@
                 item.className = 'song-item';
                 const isFav = favorites.includes(song.displayTitle);
                 
+                let starHTML = isSnapshotMode ? '' : `<button class="star-btn ${isFav ? 'is-favorite' : ''}">${isFav ? '★' : '☆'}</button>`;
+                
                 item.innerHTML = `
                     <div class="song-title-group">
                         <h3 class="song-item-title">${song.displayTitle}</h3>
                         <div class="song-mobile-preview">${song.preview || ''}</div>
                     </div>
                     <div class="song-inline-preview">${song.preview || ''}</div>
-                    <button class="star-btn ${isFav ? 'is-favorite' : ''}">${isFav ? '★' : '☆'}</button>
+                    ${starHTML}
                 `;
 
                 item.addEventListener('click', (e) => {
                     if (e.target.classList.contains('star-btn')) {
-                        if (isSnapshotMode) return; // השבתת מועדפים במצב קפוא
                         if (favorites.includes(song.displayTitle)) favorites = favorites.filter(f => f !== song.displayTitle);
                         else favorites.push(song.displayTitle);
                         localStorage.setItem('my_favorite_songs', JSON.stringify(favorites));
@@ -690,15 +671,14 @@
             applyFiltering();
         }
 
-        // --- מנגנון שיתוף קפוא (שיר בודד) ---
         document.getElementById('share-song-btn').addEventListener('click', () => {
             const song = filteredSongs[currentIndex];
             if (!song) return;
 
             const frozenPayload = {
                 settings: {
-                    mainTitle: "שיר משותף",
-                    introText: `נשלח מתוך: ${document.getElementById('main-title').innerText}`,
+                    mainTitle: document.getElementById('main-title').innerText,
+                    introText: document.getElementById('intro-text').innerText,
                     bgColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-color').trim()
                 },
                 songs: [{ ...song, volume: "כללי" }]
@@ -709,22 +689,21 @@
 
             navigator.clipboard.writeText(frozenUrl).then(() => {
                 const btn = document.getElementById('share-song-btn');
-                btn.innerText = "✓ הועתק שיר קפוא!";
-                setTimeout(() => { btn.innerText = "🔗 שתף שיר קפוא"; }, 2000);
+                btn.innerText = "✓ הועתק!";
+                setTimeout(() => { btn.innerText = "🔗 העתק קישור לשיר"; }, 2000);
             });
         });
 
-        // --- מנגנון שיתוף קפוא (כרך שלם / מה שמוצג כרגע במסך) ---
         document.getElementById('share-volume-btn').addEventListener('click', () => {
             if (filteredSongs.length === 0) return;
 
             const frozenPayload = {
                 settings: {
-                    mainTitle: selectedVolume === "הכול" ? "אוסף שירים משותף" : `כרך קפוא: ${selectedVolume}`,
-                    introText: `נשלח מתוך: ${document.getElementById('main-title').innerText}`,
+                    mainTitle: selectedVolume === "הכול" ? document.getElementById('main-title').innerText : selectedVolume,
+                    introText: selectedVolume === "הכול" ? document.getElementById('intro-text').innerText : "",
                     bgColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-color').trim()
                 },
-                songs: filteredSongs.map(s => ({ ...s, volume: "כללי" })) // מאחד אותם לכרך אחד בדף החדש
+                songs: filteredSongs.map(s => ({ ...s, volume: "כללי" }))
             };
 
             const token = compressToB64(frozenPayload);
@@ -732,8 +711,8 @@
 
             navigator.clipboard.writeText(frozenUrl).then(() => {
                 const btn = document.getElementById('share-volume-btn');
-                btn.innerText = "✓ כרך קפוא הועתק!";
-                setTimeout(() => { btn.innerText = "🔗 שתף כרך קפוא"; }, 2000);
+                btn.innerText = "✓ הועתק!";
+                setTimeout(() => { btn.innerText = "🔗 העתק קישור לכרך"; }, 2000);
             });
         });
 
