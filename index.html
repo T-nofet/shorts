@@ -302,10 +302,10 @@
             color: var(--accent-color);
         }
 
-        .back-btn {
+        .action-btn {
             background: none;
             border: 1px solid var(--border-color);
-            padding: 8px 16px;
+            padding: 8px 14px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.9rem;
@@ -314,7 +314,7 @@
             transition: all 0.2s;
         }
 
-        .back-btn:hover {
+        .action-btn:hover {
             background-color: var(--accent-color);
             color: white;
             border-color: var(--accent-color);
@@ -327,7 +327,6 @@
             margin: 0 0 30px 0;
         }
 
-        /* סגנון לנגן ה-PDF המובנה */
         .pdf-frame-container {
             width: 100%;
             height: 600px;
@@ -419,9 +418,10 @@
                 <article class="full-view-card">
                     <div class="full-view-header">
                         <h2 id="full-title" class="full-view-title"></h2>
-                        <div style="display: flex; gap: 12px; align-items: center;">
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button id="share-btn" class="action-btn">🔗 העתק קישור</button>
                             <button id="full-star-btn" class="star-btn" style="margin-right: 0;">☆</button>
-                            <button id="back-to-list-btn" class="back-btn">→ חזרה לרשימה</button>
+                            <button id="back-to-list-btn" class="action-btn">→ חזרה לרשימה</button>
                         </div>
                     </div>
                     
@@ -498,8 +498,26 @@
                 
                 uniqueVolumes = ["הכול", ...Array.from(volumesSet)];
                 
+                // בדיקה אם יש פרמטרים בכתובת ה-URL (שיר או כרך ספציפי)
+                const urlParams = new URLSearchParams(window.location.search);
+                const volumeParam = urlParams.get('volume');
+                const songParam = urlParams.get('song');
+
+                if (volumeParam && uniqueVolumes.includes(volumeParam)) {
+                    selectedVolume = volumeParam;
+                }
+
                 renderVolumesBar();
                 applyFiltering();
+
+                // פתיחה אוטומטית של שיר מבוקש מהקישור
+                if (songParam) {
+                    const foundIndex = filteredSongs.findIndex(s => s.id === songParam || encodeURIComponent(s.displayTitle) === songParam);
+                    if (foundIndex !== -1) {
+                        currentIndex = foundIndex;
+                        openFullView();
+                    }
+                }
 
                 document.getElementById('app-wrapper').classList.add('ready');
             } catch (error) {
@@ -528,6 +546,14 @@
                     selectedVolume = vol;
                     document.querySelectorAll('.volume-tab').forEach(t => t.classList.remove('active'));
                     btn.classList.add('active');
+                    
+                    // עדכון ה-URL בזמן מעבר בין כרכים (מבלי לרענן)
+                    const url = new URL(window.location);
+                    if (vol === "הכול") url.searchParams.delete('volume');
+                    else url.searchParams.set('volume', vol);
+                    url.searchParams.delete('song'); // ניקוי שיר ישן כשעוברים כרך
+                    window.history.pushState({}, '', url);
+
                     applyFiltering();
                 });
                 
@@ -596,13 +622,17 @@
             const song = filteredSongs[currentIndex];
             if (!song) return;
 
+            // עדכון ה-URL עם ה-ID של השיר הנוכחי
+            const url = new URL(window.location);
+            url.searchParams.set('song', song.id || encodeURIComponent(song.displayTitle));
+            window.history.pushState({}, '', url);
+
             document.getElementById('full-title').innerText = song.displayTitle;
             
             const textElement = document.getElementById('full-text');
             const pdfContainer = document.getElementById('pdf-container');
             const pdfViewer = document.getElementById('pdf-viewer');
 
-            // פיצול חכם בין תצוגת שיר רגיל לבין תצוגת PDF מובנה
             if (song.isDriveLink && song.driveUrl) {
                 textElement.classList.add('hidden');
                 pdfContainer.classList.remove('hidden');
@@ -630,9 +660,15 @@
         }
 
         function closeFullView() {
-            document.getElementById('pdf-viewer').src = ""; // ניקוי ה-iframe בסגירה למניעת ריצה ברקע
+            document.getElementById('pdf-viewer').src = ""; 
             document.getElementById('full-view').classList.add('hidden');
             document.getElementById('list-view').classList.remove('hidden');
+
+            // החזרת ה-URL למצב של כרך בלבד כשיוצאים לרשימה
+            const url = new URL(window.location);
+            url.searchParams.delete('song');
+            window.history.pushState({}, '', url);
+
             applyFiltering();
         }
 
@@ -644,6 +680,17 @@
             }
             localStorage.setItem('my_favorite_songs', JSON.stringify(favorites));
         }
+
+        // פונקציית העתקת קישור לשיר הנוכחי
+        document.getElementById('share-btn').addEventListener('click', () => {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                const shareBtn = document.getElementById('share-btn');
+                shareBtn.innerText = "✓ הועתק!";
+                setTimeout(() => { shareBtn.innerText = "🔗 העתק קישור"; }, 2000);
+            }).catch(err => {
+                console.error("שגיאה בהעתקת הקישור", err);
+            });
+        });
 
         document.getElementById('back-to-list-btn').addEventListener('click', closeFullView);
         
