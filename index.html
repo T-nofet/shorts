@@ -308,10 +308,14 @@
             padding: 8px 14px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 1rem;
             background-color: var(--bg-color);
             color: var(--text-color);
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
         }
 
         .action-btn:hover {
@@ -408,7 +412,7 @@
 
                 <div class="volumes-row-wrapper">
                     <nav id="volumes-container" class="volumes-bar"></nav>
-                    <button id="share-volume-btn" class="action-btn">🔗 העתק קישור לכרך</button>
+                    <button id="share-volume-btn" class="action-btn" title="העתק קישור לכרך הנוכחי">🔗</button>
                 </div>
 
                 <main id="songs-container" class="songs-list"></main>
@@ -419,7 +423,7 @@
                     <div class="full-view-header">
                         <h2 id="full-title" class="full-view-title"></h2>
                         <div style="display: flex; gap: 8px; align-items: center;">
-                            <button id="share-song-btn" class="action-btn">🔗 העתק קישור לשיר</button>
+                            <button id="share-song-btn" class="action-btn" title="העתק קישור לשיר">🔗</button>
                             <button id="full-star-btn" class="star-btn" style="margin-right: 0;">☆</button>
                             <button id="back-to-list-btn" class="action-btn">→ חזרה לרשימה</button>
                         </div>
@@ -689,8 +693,8 @@
 
             navigator.clipboard.writeText(frozenUrl).then(() => {
                 const btn = document.getElementById('share-song-btn');
-                btn.innerText = "✓ הועתק!";
-                setTimeout(() => { btn.innerText = "🔗 העתק קישור לשיר"; }, 2000);
+                btn.innerText = "✓";
+                setTimeout(() => { btn.innerText = "🔗"; }, 2000);
             });
         });
 
@@ -711,8 +715,8 @@
 
             navigator.clipboard.writeText(frozenUrl).then(() => {
                 const btn = document.getElementById('share-volume-btn');
-                btn.innerText = "✓ הועתק!";
-                setTimeout(() => { btn.innerText = "🔗 העתק קישור לכרך"; }, 2000);
+                btn.innerText = "✓";
+                setTimeout(() => { btn.innerText = "🔗"; }, 2000);
             });
         });
 
